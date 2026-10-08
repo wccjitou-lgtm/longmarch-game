@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>万水千山·长征路 —— 长征时空地图互动游戏</title>
+<link rel="stylesheet" href="css/style.css?v=20261008fix1">
+</head>
+<body>
+
+<!-- ============ 标题页 ============ -->
+<div class="screen active" id="screen-title">
+  <div class="title-inner">
+    <div class="title-star">★</div>
+    <h1 class="game-title">万水千山<span>·</span>长征路</h1>
+    <p class="game-sub">—— 重走二万五千里 · 12 站关键抉择 ——</p>
+    <p class="title-desc">1934—1935 年，中央红军从于都出发，血战湘江、四渡赤水、<br>
+      飞夺泸定桥、翻雪山、过草地……<br>
+      每一站，都有一道关系全军存亡的抉择题。<br>
+      <b>只有 11 个决策全部一次答对，长征才能胜利。</b></p>
+    <div class="title-btns">
+      <button class="btn btn-primary big" id="btn-start">开始长征</button>
+      <button class="btn big" id="btn-continue" style="display:none">继续上次征程</button>
+      <button class="btn btn-ghost big" id="btn-help">游戏规则 &amp; 科学依据</button>
+    </div>
+    <p class="map-credit">地图底图：自然资源部标准地图服务网站下载 · 审图号 GS(2022)4312 号<br>本作品仅在底图上叠加长征路线等专题要素，未对底图内容作任何修改。</p>
+  </div>
+</div>
+
+<!-- ============ 地图页 ============ -->
+<div class="screen" id="screen-map">
+  <div class="topbar">
+    <button class="tb-icon" id="tb-home" title="返回标题">☰</button>
+    <div class="tb-center">
+      <div class="tb-text"><span id="tb-progress">第 1 / 12 站</span><span class="wrong-badge" id="tb-wrong">零失误</span></div>
+      <div class="tb-track"><div class="tb-bar" id="tb-bar"></div></div>
+    </div>
+    <button class="tb-icon" id="tb-help" title="规则说明">?</button>
+  </div>
+
+  <div class="map-stage" id="map-stage">
+    <div class="map-canvas" id="map-canvas">
+      <img class="base-map" src="assets/map/base_map.webp" alt="中国标准地图（审图号 GS(2022)4312 号）" draggable="false">
+    </div>
+    <div class="map-tip">滚轮/双指缩放 · 拖动查看 · 点击 ★ 节点</div>
+    <div class="map-legend">
+      <span class="lg-cur"><i></i>当前站</span>
+      <span class="lg-done"><i></i>已完成</span>
+      <span class="lg-lock"><i></i>未到达</span>
+      <span class="lg-line"><i style="background:var(--red)"></i>已走路线</span>
+      <span class="lg-line"><i style="background:#a7adb2"></i>未走路线</span>
+    </div>
+    <button class="map-reset" id="map-reset" title="回到全图">⟲ 全图</button>
+  </div>
+
+  <div class="node-card" id="node-card"></div>
+
+  <div class="map-credit-map">底图：自然资源部标准地图服务 · 审图号 GS(2022)4312 号（叠加专题要素，未改动底图）</div>
+  <div class="toast" id="toast"></div>
+  <div class="overlay" id="his-wrap" style="display:none"></div>
+</div>
+
+<!-- 背景音乐控件（所有页面右上角） -->
+<div class="bgm-ctrl" id="bgm-ctrl" style="display:none">
+  <button id="bgm-btn" title="背景音乐">🔊</button>
+  <div class="bgm-pop" id="bgm-pop">
+    <span>音量</span>
+    <input type="range" id="bgm-vol" min="0" max="100" value="40">
+    <button id="bgm-toggle">⏸ 暂停</button>
+  </div>
+</div>
+<audio id="bgm-audio" loop preload="auto"></audio>
+
+<!-- ============ 节点页（对话/科学/决策/反馈） ============ -->
+<div class="screen" id="screen-node">
+  <div class="nd-header">
+    <span class="nd-date" id="nd-meta"></span>
+    <h2 id="nd-title"></h2>
+  </div>
+
+  <div class="dlg-stage" id="dlg-stage"></div>
+
+  <div class="dlg-actions" id="dlg-actions"></div>
+
+  <div class="dec-wrap" id="dec-wrap" style="display:none"></div>
+  <div class="fb-wrap" id="fb-wrap" style="display:none"></div>
+
+  <div class="dlg-box" id="dlg-box" style="display:none">
+    <img class="dlg-ava" id="dlg-ava" src="" alt="">
+    <div class="dlg-main">
+      <div class="dlg-name" id="dlg-name"></div>
+      <div class="dlg-text-row">
+        <p class="dlg-text" id="dlg-text"></p>
+        <span class="dlg-next" id="dlg-next">▼</span>
+      </div>
+    </div>
+    <button class="dlg-continue" id="dlg-continue" title="点击继续">继续 ▸</button>
+  </div>
+
+  <div class="photo-strip" id="photo-strip" style="display:none"></div>
+
+  <div class="photo-viewer" id="photo-viewer" style="display:none">
+    <button class="pv-btn pv-close" id="pv-close" title="关闭">✕</button>
+    <button class="pv-btn pv-prev" id="pv-prev" title="上一张">‹</button>
+    <img id="pv-img" src="" alt="历史照片">
+    <button class="pv-btn pv-next" id="pv-next" title="下一张">›</button>
+    <div class="pv-cap" id="pv-cap"></div>
+  </div>
+
+  <div class="sci-panel" id="sci-panel">
+    <div class="sci-panel-in">
+      <button class="sci-close" id="sci-close">✕ 收起</button>
+      <div id="sci-body"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 结算页 ============ -->
+<div class="screen" id="screen-settle">
+  <div class="st-inner">
+    <h2 class="st-title" id="st-title"></h2>
+    <div class="st-ring-wrap">
+      <svg viewBox="0 0 120 120" class="st-ring">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="#e8dcc0" stroke-width="10"/>
+        <circle id="st-ring-fg" cx="60" cy="60" r="52" fill="none" stroke="#c8102e" stroke-width="10"
+          stroke-linecap="round" transform="rotate(-90 60 60)"/>
+      </svg>
+      <div class="st-rate"><span id="st-rate">0%</span><small id="st-rate-sub"></small></div>
+    </div>
+    <img class="st-figure" id="st-figure" src="" alt="">
+    <div class="st-detail" id="st-detail"></div>
+    <div class="st-btns">
+      <button class="btn btn-primary big" id="btn-retry">重新挑战</button>
+      <button class="btn btn-ghost big" id="st-home">返回标题</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 说明页 ============ -->
+<div class="screen" id="screen-help">
+  <div class="help-inner">
+    <h2>游戏规则 &amp; 科学依据</h2>
+    <div class="help-cols">
+      <section>
+        <h3>🎮 玩法</h3>
+        <ul>
+          <li>沿中央红军长征路线推进，共 <b>12 站</b>，其中 <b>11 个决策关</b>。</li>
+          <li>每到一站：角色对话 → <b>科学研判</b>（地形/水文/气候数据与计算工具）→ 做出决策。</li>
+          <li>选错会看到<b>失败推演</b>：敌人会告诉你这个选择如何葬送大军。</li>
+          <li>选错后可以重选，但会被记为一次<b>失误</b>。</li>
+          <li>到达吴起镇结算：<b>决策正确率 100%（首次全对）</b>才算长征胜利。</li>
+          <li>每题有两段免费【提示】，不扣分。</li>
+        </ul>
+      </section>
+      <section>
+        <h3>🔬 科学信息（每站 ≥ 2 类）</h3>
+        <ul>
+          <li><b>水文</b>：江河流速、宽度、渡江运力计算器（金沙江、大渡河）</li>
+          <li><b>地形</b>：海拔剖面图（夹金山、腊子口）</li>
+          <li><b>气候</b>：气温垂直递减率计算器（每升高 100 米约降 0.6℃）</li>
+          <li><b>地貌风险</b>：沼泽分层剖面图（松潘草地）</li>
+          <li><b>距离与速度</b>：行军速度计算器（湘江、泸定桥）</li>
+        </ul>
+      </section>
+      <section>
+        <h3>📚 史料与数据来源</h3>
+        <ul>
+          <li>中共中央党史研究室《中国共产党历史》第一卷</li>
+          <li>于都/湘江战役/遵义会议/四渡赤水/皎平渡/彝海结盟/安顺场/泸定桥/腊子口/吴起镇/会宁等纪念馆公开资料</li>
+          <li>中国气象局科普资料、若尔盖县情资料</li>
+          <li>页面数据为教学取整值，精确值与出处见提交材料《科学依据》文档</li>
+        </ul>
+      </section>
+      <section>
+        <h3>🗺 地图合规</h3>
+        <p>底图：自然资源部标准地图服务网站下载，审图号 GS(2022)4312 号（1:1000 万中国全图，竖版）。本作品仅在底图上叠加长征路线、节点图标等专题要素，未对底图内容作任何修改。</p>
+      </section>
+    </div>
+    <button class="btn btn-primary" id="help-close">返回</button>
+  </div>
+</div>
+
+<script src="js/data/characters.js?v=20261001m"></script>
+<script src="js/data/route.js?v=20261001m"></script>
+<script src="js/data/nodes.js?v=20261008fix1"></script>
+<script src="js/data/photos.js?v=20261001m"></script>
+<script src="js/data/music.js?v=20261001m"></script>
+<script src="js/components.js?v=20261008fix1"></script>
+<script src="js/dialogue.js?v=20261001m"></script>
+<script src="js/decision.js?v=20261008fix1"></script>
+<script src="js/map.js?v=20261008fix1"></script>
+<script src="js/main.js?v=20261008fix1"></script>
+</body>
+</html>
